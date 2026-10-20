@@ -66,3 +66,7 @@ Xem [BACKEND_SETUP.md](./BACKEND_SETUP.md) để biết cấu hình env, thông 
 ## Lưu trữ cloud
 
 Journal, prop firm, playbook, tổng kết và thiết lập lưu trong Supabase qua API xác thực. Đăng ký/xác nhận email rồi đăng nhập. Nếu có nhật ký cũ trên trình duyệt, dùng banner “Xem & nhập lên cloud” và sao lưu trước khi thay thế. Xem BACKEND_SETUP.md để biết schema JSONB, revision, giới hạn 2 MB và cấu hình Vercel.
+
+## Quyết định về form giao dịch
+
+Khi tạo lệnh mới, dùng thông tin của form giao dịch được lưu gần nhất (kể cả sau chỉnh sửa). `lastTradeFormId` lưu cùng journal trên Supabase; bản sao lưu cũ không có trường này dùng giao dịch đầu danh sách. Giữ các thông tin khác, gồm mã tài sản, tài khoản/prop, hướng, trạng thái, SL, hệ số, phí, Net P&L nhập tay, setup, tâm lý, checklist và ghi chú. Người dùng kiểm tra trước khi lưu. Không tái sử dụng ID, Buy/Sell Time, Buy/Sell Price hoặc Size: thời gian để trống, giá và size để trống trên form và bắt buộc nhập lại. Sửa giao dịch hiện có vẫn mở đầy đủ giá trị của chính giao dịch đó. Thay đổi chưa lưu hoặc form bị hủy không trở thành mặc định. Modal nhập lệnh rộng tối đa 1100px, ba cột desktop, hai cột tablet và một cột mobile.

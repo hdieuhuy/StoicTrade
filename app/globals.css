@@ -294,3 +294,11 @@ html { scrollbar-gutter: stable; }
 .workspace-main .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
 .workspace-main .metrics>.metric,.workspace-main .chart-row>*{min-width:0;overflow-wrap:anywhere}
 @media(max-width:740px){.workspace-main .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.trade-entry-dialog{width:min(1100px,calc(100vw - 40px));max-height:94svh;padding:34px 38px}
+.trade-entry-dialog .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.trade-entry-dialog .form-grid input,.trade-entry-dialog .form-grid select{min-height:46px;font-size:13px;padding:12px 14px;width:100%;min-width:0}
+.trade-entry-dialog .modal-heading{margin-bottom:22px}
+.trade-entry-dialog .modal-actions{position:sticky;bottom:-34px;background:#201e35;padding:18px 0;margin-bottom:-12px;border-top:1px solid #ffffff12;z-index:1}
+@media(max-width:980px){.trade-entry-dialog .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}}
+@media(max-width:600px){.trade-entry-dialog{width:calc(100vw - 20px);padding:24px 18px}.trade-entry-dialog .form-grid{grid-template-columns:minmax(0,1fr);gap:18px}.trade-entry-dialog .modal-actions{bottom:-24px}.trade-entry-dialog .modal-heading h2{font-size:20px}}

@@ -13,8 +13,14 @@ export type PropAccount = {
   startDate: string; deadline: string; fee: number; timezone: string; resetHour: number;
   equity: number | null; equityAt: string; notes: string;
 };
-export type Journal = { version: 1; propAccounts: PropAccount[]; trades: Trade[]; strategies: Strategy[]; reflections: Reflection[]; capital: number; riskPercent: number; goal: string };
+export type Journal = { lastTradeFormId?: string; version: 1; propAccounts: PropAccount[]; trades: Trade[]; strategies: Strategy[]; reflections: Reflection[]; capital: number; riskPercent: number; goal: string };
 export const initialJournal: Journal = { version: 1, propAccounts: [], trades: [], strategies: [], reflections: [], capital: 10000, riskPercent: 1, goal: '' };
+/** Reuse saved form choices; execution details must be entered for each new trade. */
+export function reuseTradeForm(base:Trade,previous?:Trade):Trade {
+ if(!previous)return base;
+ const {symbol,account,propFirmId,side,status,stop,multiplier,fees,netPnl,strategy,emotion,disciplined,notes}=previous;
+ return {...base,symbol,account,propFirmId,side,status,stop,multiplier,fees,netPnl,strategy,emotion,disciplined,notes};
+}
 export function pnl(t: Trade) { return t.status === 'closed' ? (t.netPnl ?? (((t.exit - t.entry) * (t.side === 'Long' ? 1 : -1) * t.quantity * t.multiplier) - t.fees)) : 0; }
 export function risk(t: Trade) { return t.stop > 0 ? Math.abs(t.entry - t.stop) * t.quantity * t.multiplier : 0; }
 export function rMultiple(t: Trade) { const amount = risk(t); return amount > 0 && t.status === 'closed' ? pnl(t) / amount : 0; }
@@ -60,6 +66,7 @@ export function positionSize(capital: number, percent: number, entry: number, st
 export function parseJournal(raw: unknown): Journal {
   if (!raw || typeof raw !== 'object') throw new Error('Tệp dữ liệu không hợp lệ.');
   const d = {...raw} as Journal;
+  if (d.lastTradeFormId !== undefined && typeof d.lastTradeFormId !== 'string') throw new Error('Thông tin form gần nhất không hợp lệ.');
   if (d.propAccounts === undefined) d.propAccounts = [];
   if (!Array.isArray(d.propAccounts)) throw new Error('Danh sách prop firm không hợp lệ.');
   for (const a of d.propAccounts) if (propAccountError(a)) throw new Error('Tài khoản prop firm không hợp lệ.');

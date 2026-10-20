@@ -46,3 +46,16 @@ test('Money input groups thousands without changing price precision or signed P&
  assert.equal(formatPrice(1.08475),'$1.08475');
  assert.equal(formatPrice(0.00001234),'$0.00001234');
 });
+
+const {reuseTradeForm}=await import('../app/lib/trading.ts');
+test('New trade reuses last form choices but resets execution fields and identity',()=>{
+ const base={...trade,id:'new-trade',entry:0,exit:0,quantity:0,openedAt:'',closedAt:''};
+ const old={...trade,netPnl:-125.75,notes:'Previous note',propFirmId:'prop-id'};
+ const next=reuseTradeForm(base,old);
+ for(const k of ['id','entry','exit','quantity','openedAt','closedAt'])assert.equal(next[k],base[k]);
+ for(const k of ['symbol','account','side','stop','multiplier','fees','netPnl','notes','propFirmId'])assert.equal(next[k],old[k]);
+ assert.deepEqual(reuseTradeForm(base),base);
+ const saved=parseJournal({...initialJournal,trades:[trade],lastTradeFormId:trade.id});
+ assert.equal(saved.lastTradeFormId,trade.id);
+ assert.throws(()=>parseJournal({...initialJournal,lastTradeFormId:123}));
+});
