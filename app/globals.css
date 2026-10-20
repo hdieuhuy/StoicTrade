@@ -286,3 +286,11 @@ html { scrollbar-gutter: stable; }
 .share-preview-dialog{width:min(1150px,calc(100vw - 24px));height:90svh;max-height:90svh;padding:0;border:1px solid #b7a0e544;border-radius:16px;background:#111529;color:#eee8f8;overflow:hidden}.share-preview-dialog[open]{display:flex;flex-direction:column}.share-preview-dialog::backdrop{background:#060918c9;backdrop-filter:blur(6px)}.share-preview-dialog>header{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px 20px;border-bottom:1px solid #ffffff12}.share-preview-dialog h2{font-size:14px;font-weight:500;margin:0}.share-preview-dialog iframe{width:100%;flex:1;min-height:0;border:0;background:#111529}
 
 .cloud-auth{min-height:100svh;display:grid;place-items:center;padding:32px;background:radial-gradient(ellipse at 20% 10%,#26225e88,transparent 60%),#080b15}.cloud-auth>section{width:min(100%,480px);padding:40px}.cloud-auth h1{font-size:clamp(28px,4vw,36px);line-height:1.35;margin:18px 0}.cloud-auth .form-stack{margin:28px 0}.cloud-status{display:flex;align-items:center;justify-content:flex-end;gap:16px;color:var(--muted);font-size:12px;margin:12px 0}.cloud-status span{overflow-wrap:anywhere}.notice p{margin:8px 0}.cloud-auth input{width:100%}
+
+/* Keep all workspace views bound to the viewport, independent of table content. */
+.workspace-layout{width:100%;min-width:0;flex:1 1 0%}
+.workspace-main{min-width:0}
+.workspace-main .table-scroll{max-width:100%;min-width:0}
+.workspace-main .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+.workspace-main .metrics>.metric,.workspace-main .chart-row>*{min-width:0;overflow-wrap:anywhere}
+@media(max-width:740px){.workspace-main .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}

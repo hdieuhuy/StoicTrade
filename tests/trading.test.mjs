@@ -34,3 +34,15 @@ test('Sharing redacts private account names, notes, local IDs and prop links by 
 test('Shared report supports opt-in details and unknown R without fabrication',()=>{const s=journeySnapshot([{...trade,stop:0}],{...shareOptions,accounts:true,notes:true});assert.equal(s.trades[0].account,'Demo');assert.equal(s.trades[0].r,null);assert.equal(s.summary.averageR,null);assert.equal(journeySnapshot([trade],{...shareOptions,details:false}).trades.length,0);});
 test('HTML share escapes user content and public snapshots whitelist fields',()=>{const s=journeySnapshot([{...trade,notes:'<script>alert(1)</script>'}],{...shareOptions,title:'<img src=x onerror=alert(1)>',notes:true});const html=journeyReport(s);assert.ok(!html.includes('<script>alert(1)</script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(!html.includes('<img src=x'));assert.ok(!('secret' in validateJourney({...s,secret:'private'})));assert.throws(()=>validateJourney({...s,summary:{...s.summary,net:NaN}}));});
 test('Compressed share links round trip without browser-local records',async()=>{const {encodeJourney,decodeJourney}=await import('../app/lib/card-render.ts');const s=journeySnapshot([trade],shareOptions);const encoded=await encodeJourney(s);assert.deepEqual(validateJourney(await decodeJourney(encoded)),s);await assert.rejects(()=>decodeJourney('bad.payload'));await assert.rejects(()=>decodeJourney('g.'+'a'.repeat(25001)));});
+
+const {formatMoney,formatPrice,groupNumericInput,cleanNumericInput}=await import('../app/lib/number-format.ts');
+test('Money input groups thousands without changing price precision or signed P&L',()=>{
+ assert.equal(groupNumericInput('29724.75000'),'29,724.75000');
+ assert.equal(groupNumericInput('-4060.25'),'-4,060.25');
+ assert.equal(groupNumericInput('0.00001234'),'0.00001234');
+ assert.equal(groupNumericInput(''),'');
+ assert.equal(cleanNumericInput('$29,724.75'),'29724.75');
+ assert.equal(formatMoney(50000),'$50,000.00');
+ assert.equal(formatPrice(1.08475),'$1.08475');
+ assert.equal(formatPrice(0.00001234),'$0.00001234');
+});
