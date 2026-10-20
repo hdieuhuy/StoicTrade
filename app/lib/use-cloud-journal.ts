@@ -1,0 +1,16 @@
+'use client';
+import {useEffect,useRef,useState,type Dispatch,type SetStateAction} from 'react';
+import {initialJournal,parseJournal,type Journal} from './trading';
+import {browserSupabase} from './supabase-browser';
+export function useCloudJournal(userId:string){
+ const [journal,update]=useState<Journal>(initialJournal);const [ready,setReady]=useState(false);const [saving,setSaving]=useState(false);const [failure,setFailure]=useState('');
+ const generation=useRef(0);const current=useRef(journal);const revision=useRef(0);const locked=useRef(false);const alive=useRef(true);const pending=useRef(false);
+ const [legacy,setLegacy]=useState<Journal|null>(null);const [legacyError,setLegacyError]=useState('');
+ async function call(method='GET',data?:Journal){const {data:auth}=await browserSupabase().auth.getSession();if(!auth.session||auth.session.user.id!==userId)throw new Error('Phiên đăng nhập hết hạn. Hãy tải bản sao lưu trước khi đăng nhập lại.');const response=await fetch('/api/journal',{method,signal:AbortSignal.timeout(20000),headers:{Authorization:`Bearer ${auth.session.access_token}`,'Content-Type':'application/json'},...(data?{body:JSON.stringify({data,revision:revision.current})}:{})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Không thể đồng bộ.');return result;}
+ async function load(){const run=++generation.current;setFailure('');try{const result=await call();if(!alive.current||run!==generation.current)return;const data=parseJournal(result.data);current.current=data;revision.current=result.revision;update(data);setReady(true);}catch(e){if(alive.current&&run===generation.current)setFailure(e instanceof Error?e.message:'Không tải được nhật ký.');}}
+ useEffect(()=>{alive.current=true;void load();try{const raw=localStorage.getItem('stoictrade.journal.v1');if(raw)setLegacy(parseJournal(JSON.parse(raw)));}catch{setLegacyError('Không đọc được bản cũ trên trình duyệt. Bản gốc vẫn được giữ nguyên.');}return()=>{alive.current=false;generation.current++;};},[userId]);
+ useEffect(()=>{const guard=(e:BeforeUnloadEvent)=>{if(pending.current){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[]);
+ async function persist(next:Journal){if(locked.current)return;locked.current=true;pending.current=true;setSaving(true);setFailure('');try{const result=await call('PUT',next);if(!alive.current)return;revision.current=result.revision;pending.current=false;}catch(e){if(alive.current)setFailure(e instanceof Error?e.message:'Chưa thể lưu dữ liệu.');}finally{locked.current=false;if(alive.current)setSaving(false);}}
+ const setJournal:Dispatch<SetStateAction<Journal>>=(action)=>{if(locked.current||pending.current||!ready)return;const next=typeof action==='function'?action(current.current):action;try{parseJournal(next);}catch{setFailure('Thay đổi không hợp lệ.');return;}current.current=next;update(next);void persist(next);};
+ return {journal,setJournal,ready,storageBlocked:!ready||saving||!!failure,saving,failure,legacy,legacyError,retry:()=>pending.current?persist(current.current):load(),hasPending:pending.current,dismissLegacy:()=>setLegacy(null)};
+}
