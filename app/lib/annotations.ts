@@ -1,0 +1,2 @@
+export type ChartAnnotation={id:string;x:number;y:number;text:string};
+export function validateAnnotations(value:unknown):ChartAnnotation[]{if(!Array.isArray(value)||value.length>30)throw new Error('Tối đa 30 ghi chú trên mỗi ảnh.');return value.map(a=>{if(!a||typeof a.id!=='string'||a.id.length>80||typeof a.text!=='string'||!a.text.trim()||a.text.length>200||!Number.isFinite(a.x)||!Number.isFinite(a.y)||a.x<0||a.x>100||a.y<0||a.y>100)throw new Error('Ghi chú trên ảnh không hợp lệ.');return {id:a.id,x:a.x,y:a.y,text:a.text.trim()};});}

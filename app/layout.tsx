@@ -5,6 +5,7 @@ import '@fontsource/be-vietnam-pro/latin-500.css';
 import '@fontsource/be-vietnam-pro/vietnamese-500.css';
 import '@fontsource/be-vietnam-pro/latin-600.css';
 import '@fontsource/be-vietnam-pro/vietnamese-600.css';
+import 'react-day-picker/style.css';
 import './globals.css';
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://127.0.0.1:3000');
 const title = 'StoicTrade — Hành trình trading của bạn';

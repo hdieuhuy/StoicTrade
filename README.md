@@ -15,7 +15,7 @@ Mở http://127.0.0.1:3000. `npm run build` kiểm tra production; `npm test` ki
 
 - Intro quote, chuyển cảnh không gian 4,2 giây, bỏ qua/phát lại, hỗ trợ giảm chuyển động. Dải plasma và vòng sáng giữ animation liên tục; chuyển cảnh chỉ thay đổi transform/opacity, không blur hoặc scale dashboard. Chuyển cảnh chạy bằng Web Animations API; chỉ gỡ intro sau khi toàn bộ Animation.finished hoàn tất, không dùng timer để cắt cảnh. Hiệu ứng chỉ mờ ở cuối để giữ rõ các dải sáng khi mở cổng. Workspace được memo hóa để không dựng lại ở đầu chuyển cảnh.
 - Prop Firm: quản lý nhiều tài khoản/giai đoạn, trạng thái, mục tiêu, giới hạn lỗ cố định/trailing/EOD, tùy chọn không giới hạn lỗ ngày, consistency, ngày tối thiểu, phí, thời hạn, múi giờ/giờ reset và equity nhập tay. Liên kết giao dịch bằng ID; sửa tên vẫn giữ liên kết. Không gỡ hồ sơ đang có lệnh. Quy tắc chưa đối chiếu được hiển thị chờ xác nhận.
-- Chia sẻ hành trình: card tổng kết hoặc một lệnh, ba phối màu Canvas 1600×900, PNG/clipboard/native share, báo cáo HTML độc lập có bảng lệnh và biểu đồ, in PDF, link bản chụp `/journey/#...` nén và kiểm tra dữ liệu. Chọn ngày/tài khoản, tên hiển thị, lời nhắn, tùy chọn chi tiết/tên tài khoản/ghi chú.
+- Chia sẻ hành trình: card tổng kết hoặc một lệnh, chín phối màu Canvas 1600×900, PNG/clipboard/native share, báo cáo HTML độc lập có bảng lệnh và biểu đồ, in PDF, link bản chụp `/journey/#...` nén và kiểm tra dữ liệu. Chọn ngày/tài khoản, tên hiển thị, lời nhắn, tùy chọn chi tiết/tên tài khoản/ghi chú.
 - Font chính Be Vietnam Pro (Latin + tiếng Việt, nhúng qua Fontsource).
 - Nhật ký có cột Date, Symbol, Buy/Sell Price, Buy/Sell Time, Direction, Size, Net P&L và Action. Lệnh Sell đảo ánh xạ mở/đóng đúng theo hướng. Thời gian hỗ trợ giây. Có thể nhập Net P&L từ báo cáo (không trừ phí hai lần); SL tùy chọn, thiếu SL thì không có R.
 - Nhật ký: thêm/sửa/xóa lệnh, Long/Short, mở/đóng, tài khoản, thời gian, giá, SL ban đầu, khối lượng, hệ số hợp đồng, phí, setup, tâm lý, ghi chú và tuân thủ.
@@ -36,7 +36,7 @@ Drawdown tính từ đỉnh P&L của kỳ đang lọc; % dùng vốn tham chi�
 
 ## Chưa triển khai
 
-ảnh biểu đồ, chốt từng phần, nhập CSV theo từng sàn, kết nối broker, nạp/rút và quy đổi đa tiền tệ, trang hành trình công khai. Cần lựa chọn hạ tầng và nền tảng giao dịch để triển khai các phần này chính xác.
+chốt từng phần, nhập CSV theo từng sàn, kết nối broker, nạp/rút và quy đổi đa tiền tệ. Cần lựa chọn hạ tầng và nền tảng giao dịch để triển khai các phần này chính xác.
 
 ## Prop Firm
 
@@ -54,7 +54,7 @@ Card và báo cáo dùng dữ liệu đang có, không tự thêm dữ liệu mi
 
 PNG xuất bằng Canvas sau khi font tải xong; cùng một canvas dùng cho xem trước và file tải. HTML là báo cáo độc lập không cần máy chủ, không tải tài nguyên bên ngoài, có nút In / Lưu PDF. Native Share và clipboard phụ thuộc trình duyệt và quyền của thiết bị; luôn có nút tải file thay thế.
 
-Snapshot chỉ gồm thông tin đã chọn. Mặc định ẩn tên tài khoản và ghi chú từng lệnh; không xuất ID, liên kết prop firm, vốn, thiết lập hoặc nhật ký tâm lý. Tên tài khoản chỉ đưa vào khi chọn hiển thị; ghi chú cần bật riêng. Báo cáo ghi rõ số liệu tự ghi chép chưa xác minh. Link chứa snapshot trong URL hash, không ghi nhật ký vào server; không tự cập nhật và không thu hồi được bản đã gửi. Link giới hạn 24 KB ký tự mã hóa; dữ liệu lớn cần file HTML. Giải nén giới hạn 500 KB và nội dung được kiểm tra trước khi hiển thị.
+Snapshot chỉ gồm thông tin đã chọn. Mặc định ẩn tên tài khoản và ghi chú từng lệnh; không xuất ID, liên kết prop firm, vốn, thiết lập hoặc nhật ký tâm lý. Tên tài khoản chỉ đưa vào khi chọn hiển thị; ghi chú cần bật riêng. Báo cáo ghi rõ số liệu tự ghi chép chưa xác minh. Link nhúng cũ chứa snapshot trong URL hash, không ghi nhật ký vào server; không tự cập nhật và không thu hồi được bản đã gửi. Link giới hạn 24 KB ký tự mã hóa; dữ liệu lớn cần file HTML. Giải nén giới hạn 500 KB và nội dung được kiểm tra trước khi hiển thị.
 
 Ở localhost, link chỉ hoạt động trên thiết bị chạy ứng dụng. Dùng file PNG/HTML khi gửi sang thiết bị khác. Để link hoạt động công khai cần triển khai website lên tên miền truy cập được.
 
@@ -69,4 +69,14 @@ Journal, prop firm, playbook, tổng kết và thiết lập lưu trong Supabase
 
 ## Quyết định về form giao dịch
 
-Khi tạo lệnh mới, dùng thông tin của form giao dịch được lưu gần nhất (kể cả sau chỉnh sửa). `lastTradeFormId` lưu cùng journal trên Supabase; bản sao lưu cũ không có trường này dùng giao dịch đầu danh sách. Giữ các thông tin khác, gồm mã tài sản, tài khoản/prop, hướng, trạng thái, SL, hệ số, phí, Net P&L nhập tay, setup, tâm lý, checklist và ghi chú. Người dùng kiểm tra trước khi lưu. Không tái sử dụng ID, Buy/Sell Time, Buy/Sell Price hoặc Size: thời gian để trống, giá và size để trống trên form và bắt buộc nhập lại. Sửa giao dịch hiện có vẫn mở đầy đủ giá trị của chính giao dịch đó. Thay đổi chưa lưu hoặc form bị hủy không trở thành mặc định. Modal nhập lệnh rộng tối đa 1100px, ba cột desktop, hai cột tablet và một cột mobile.
+Khi tạo lệnh mới, dùng thông tin của form giao dịch được lưu gần nhất (kể cả sau chỉnh sửa). `lastTradeFormId` lưu cùng journal trên Supabase; bản sao lưu cũ không có trường này dùng giao dịch đầu danh sách. Giữ các thông tin khác, gồm mã tài sản, tài khoản/prop, hướng, trạng thái, SL, hệ số, phí, setup, tâm lý, checklist và ghi chú. Người dùng kiểm tra trước khi lưu. Không tái sử dụng ID, Buy/Sell Time, Buy/Sell Price hoặc Size: thời gian để trống, giá và size để trống trên form và bắt buộc nhập lại. Sửa giao dịch hiện có vẫn mở đầy đủ giá trị của chính giao dịch đó. Thay đổi chưa lưu hoặc form bị hủy không trở thành mặc định. Modal nhập lệnh rộng tối đa 1100px, ba cột desktop, hai cột tablet và một cột mobile.
+
+## Ảnh biểu đồ, chia sẻ server và phân tích sâu
+
+Ảnh trước/sau lệnh trong modal sửa giao dịch, lưu private trên Supabase Storage. Có ghi chú tổng quan và marker đặt trực tiếp lên ảnh; nút lưu ghi chú riêng. Thêm phần quản lý link server trong Chia sẻ hành trình: hạn 1/7/30/90 ngày, lấy lại link, xem, thu hồi. Bản chia sẻ chỉ gồm nội dung đã chọn; ảnh luôn riêng tư. Phân tích sâu theo mã/setup/khung giờ/ngày/thời gian giữ lệnh và chuỗi thắng/thua ở trang Phân tích hiệu suất. Xem BACKEND_SETUP.md để biết giới hạn múi giờ, backup ảnh và API mới.
+
+## Bộ chọn giao diện
+
+Dropdown dùng Radix Select với trạng thái chọn, cuộn, điều khiển bàn phím và popover đồng bộ Glassmorphism. Date picker dùng React DayPicker tiếng Việt, tuần bắt đầu thứ Hai; hỗ trợ ngày, ngày/giờ/phút/giây và tháng. Giá trị lưu/API vẫn ISO local như trước; chỉ định dạng hiển thị thành ngày/tháng/năm. Popover được gắn vào native dialog gần nhất để không bị che sau modal. Ràng buộc required/min/max tiếp tục kiểm tra khi submit; ô chọn giờ hỗ trợ giây.
+
+Lệnh mới không sao chép Net P&L nhập tay của lệnh trước để tránh ghi đè kết quả tính từ giá. Lịch hỗ trợ nhóm theo ngày mở hoặc đóng và xem chi tiết từng lệnh trong ngày; mặc định theo ngày mở. Lệnh mở ngày 20 và đóng ngày 21 được cộng vào ngày 20; chỉ lệnh đã đóng mới góp P&L.

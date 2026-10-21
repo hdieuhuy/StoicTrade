@@ -18,8 +18,8 @@ export const initialJournal: Journal = { version: 1, propAccounts: [], trades: [
 /** Reuse saved form choices; execution details must be entered for each new trade. */
 export function reuseTradeForm(base:Trade,previous?:Trade):Trade {
  if(!previous)return base;
- const {symbol,account,propFirmId,side,status,stop,multiplier,fees,netPnl,strategy,emotion,disciplined,notes}=previous;
- return {...base,symbol,account,propFirmId,side,status,stop,multiplier,fees,netPnl,strategy,emotion,disciplined,notes};
+ const {symbol,account,propFirmId,side,status,stop,multiplier,fees,strategy,emotion,disciplined,notes}=previous;
+ return {...base,symbol,account,propFirmId,side,status,stop,multiplier,fees,netPnl:undefined,strategy,emotion,disciplined,notes};
 }
 export function pnl(t: Trade) { return t.status === 'closed' ? (t.netPnl ?? (((t.exit - t.entry) * (t.side === 'Long' ? 1 : -1) * t.quantity * t.multiplier) - t.fees)) : 0; }
 export function risk(t: Trade) { return t.stop > 0 ? Math.abs(t.entry - t.stop) * t.quantity * t.multiplier : 0; }
@@ -36,13 +36,28 @@ export function tradeError(t: Trade): string | null {
   if (!Number.isFinite(risk(t)) || !Number.isFinite(pnl(t))) return 'Giá trị vượt giới hạn tính toán. Vui lòng kiểm tra khối lượng và hệ số.';
   return null;
 }
+/** Use the same local calendar day as the dates rendered in the journal table. */
+export function tradeDayKey(value:string){
+ const date=new Date(value);if(!Number.isFinite(date.getTime()))return '';
+ return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+export function sortTradeHistory(trades:Trade[]):Trade[]{
+ return [...trades].sort((a,b)=>Date.parse(b.openedAt)-Date.parse(a.openedAt)
+  || (Date.parse(b.status==='closed'?b.closedAt:b.openedAt)-Date.parse(a.status==='closed'?a.closedAt:a.openedAt))
+  || a.id.localeCompare(b.id));
+}
+export function dailyTradeTotals(trades:Trade[],basis:'opened'|'closed'='closed'){
+ const totals=new Map<string,{value:number;count:number}>();
+ for(const t of trades){if(t.status!=='closed')continue;const day=tradeDayKey(basis==='opened'?t.openedAt:t.closedAt);if(!day)continue;const old=totals.get(day)||{value:0,count:0};totals.set(day,{value:old.value+pnl(t),count:old.count+1});}
+ return totals;
+}
 export function statistics(trades: Trade[], capital = 10000) {
-  const closed = trades.filter(t => t.status === 'closed').sort((a,b) => Date.parse(a.closedAt)-Date.parse(b.closedAt));
+  const closed = trades.filter(t => t.status === 'closed').sort((a,b) => Date.parse(a.closedAt)-Date.parse(b.closedAt)||Date.parse(a.openedAt)-Date.parse(b.openedAt)||a.id.localeCompare(b.id));
   const profits = closed.map(pnl);
   const wins = profits.filter(n => n > 0); const losses = profits.filter(n => n < 0);
   const grossProfit = wins.reduce((s,n) => s+n,0); const grossLoss = -losses.reduce((s,n) => s+n,0);
   let equity = 0; let peak = 0; let drawdown = 0; let drawdownPercent = 0;
-  const curve = [{label:'Bắt đầu', value:0}, ...closed.map(t => { equity += pnl(t); peak = Math.max(peak,equity); drawdown = Math.max(drawdown,peak-equity); if (capital+peak > 0) drawdownPercent = Math.max(drawdownPercent,(peak-equity)/(capital+peak)*100); return {label:t.closedAt.slice(0,10),value:equity}; })];
+  const curve = [{label:'Bắt đầu', value:0}, ...closed.map(t => { equity += pnl(t); peak = Math.max(peak,equity); drawdown = Math.max(drawdown,peak-equity); if (capital+peak > 0) drawdownPercent = Math.max(drawdownPercent,(peak-equity)/(capital+peak)*100); return {label:tradeDayKey(t.closedAt),value:equity}; })];
   return {closed, total:profits.reduce((s,n)=>s+n,0), winRate:closed.length ? wins.length/closed.length*100 : 0,
     profitFactor:grossLoss > 0 ? grossProfit/grossLoss : grossProfit > 0 ? Infinity : null,
     expectancy:closed.length ? (grossProfit-grossLoss)/closed.length : 0,

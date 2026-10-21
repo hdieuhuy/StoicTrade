@@ -53,9 +53,50 @@ test('New trade reuses last form choices but resets execution fields and identit
  const old={...trade,netPnl:-125.75,notes:'Previous note',propFirmId:'prop-id'};
  const next=reuseTradeForm(base,old);
  for(const k of ['id','entry','exit','quantity','openedAt','closedAt'])assert.equal(next[k],base[k]);
- for(const k of ['symbol','account','side','stop','multiplier','fees','netPnl','notes','propFirmId'])assert.equal(next[k],old[k]);
- assert.deepEqual(reuseTradeForm(base),base);
+ for(const k of ['symbol','account','side','stop','multiplier','fees','notes','propFirmId'])assert.equal(next[k],old[k]);
+ assert.equal(next.netPnl,undefined);assert.deepEqual(reuseTradeForm(base),base);
  const saved=parseJournal({...initialJournal,trades:[trade],lastTradeFormId:trade.id});
  assert.equal(saved.lastTradeFormId,trade.id);
  assert.throws(()=>parseJournal({...initialJournal,lastTradeFormId:123}));
+});
+
+const {performanceBreakdown,tradeStreaks,holdingMinutes,tradeClock}=await import('../app/lib/performance.ts');
+const {validateAnnotations}=await import('../app/lib/annotations.ts');
+test('Deep analytics groups net results and ignores open trades',()=>{
+ const list=[{...trade,id:'a',symbol:'MNQ',netPnl:100,openedAt:'2026-10-19T08:00:00',closedAt:'2026-10-19T08:04:00'},{...trade,id:'b',symbol:'MNQ',netPnl:-50,openedAt:'2026-10-19T16:00:00',closedAt:'2026-10-19T17:00:00'},{...trade,id:'c',status:'open',netPnl:500}];
+ const [row]=performanceBreakdown(list,'symbol');assert.equal(row.count,2);assert.equal(row.net,50);assert.equal(row.winRate,50);assert.equal(row.profitFactor,2);assert.equal(row.expectancy,25);
+ assert.equal(performanceBreakdown(list,'weekday')[0].label,'Thứ hai');assert.deepEqual(performanceBreakdown(list,'session').map(r=>r.label),['08:00–16:00','16:00–24:00']);
+ assert.equal(holdingMinutes(list[0]),4);assert.equal(performanceBreakdown(list,'duration')[0].label,'< 5 phút');assert.equal(tradeClock('2026-10-19T23:30:00Z','Asia/Ho_Chi_Minh').day,2);
+});
+test('Streaks use closing chronology; breakeven resets streaks and open trades are excluded',()=>{
+ const rows=[100,100,0,-10,-10,-10,50].map((netPnl,i)=>({...trade,id:String(i),netPnl,closedAt:`2026-10-19T10:0${i}:00`}));
+ assert.deepEqual(tradeStreaks(rows.reverse()),{maxWin:2,maxLoss:3,currentCount:1,currentKind:'thắng'});
+ assert.deepEqual(tradeStreaks([]),{maxWin:0,maxLoss:0,currentCount:0,currentKind:'hòa'});
+});
+test('Chart annotations whitelist fields and constrain coordinates and content',()=>{
+ assert.deepEqual(validateAnnotations([{id:'x',x:25,y:50,text:' Entry ',private:'removed'}]),[{id:'x',x:25,y:50,text:'Entry'}]);
+ assert.throws(()=>validateAnnotations([{id:'x',x:101,y:50,text:'bad'}]));assert.throws(()=>validateAnnotations([{id:'x',x:0,y:0,text:''}]));assert.throws(()=>validateAnnotations(new Array(31).fill({})));
+});
+
+const {sortTradeHistory,dailyTradeTotals,tradeDayKey}=await import('../app/lib/trading.ts');
+test('History retains all same-day fills, sorts actual timestamps and resolves shared entry times by exit',()=>{
+ const a={...trade,id:'a',openedAt:'2026-10-19T21:11:01',closedAt:'2026-10-19T21:16:36',netPnl:176};
+ const b={...trade,id:'b',openedAt:a.openedAt,closedAt:'2026-10-19T21:18:42',netPnl:274.5};
+ const c={...trade,id:'c',openedAt:'2026-10-19T22:00:00',closedAt:'2026-10-19T22:04:00',netPnl:-50};
+ const list=[a,c,b];assert.deepEqual(sortTradeHistory(list).map(t=>t.id),['c','b','a']);assert.deepEqual(list.map(t=>t.id),['a','c','b']);
+ const totals=dailyTradeTotals(list);assert.deepEqual(totals.get('2026-10-19'),{value:400.5,count:3});assert.equal(totals.size,1);
+ const earlier={...a,id:'early',openedAt:'2026-10-19T10:00:00+07:00'};const later={...b,id:'late',openedAt:'2026-10-19T04:00:00Z'};assert.deepEqual(sortTradeHistory([earlier,later]).map(t=>t.id),['late','early']);
+});
+test('Daily totals use the displayed calendar day, include every closed trade and exclude open positions',()=>{
+ const a={...trade,id:'a',closedAt:'2026-10-19T23:30:00Z',netPnl:100};const b={...a,id:'b',netPnl:-25};const open={...a,id:'open',status:'open',netPnl:999};
+ assert.deepEqual(dailyTradeTotals([a,b,open]).get(tradeDayKey(a.closedAt)),{value:75,count:2});
+ assert.equal(sortTradeHistory([a,b]).length,2);assert.equal(tradeDayKey('invalid'),'');
+});
+
+test('Overnight trades appear on opening or closing calendar day as explicitly selected',()=>{
+ const overnight={...trade,id:'overnight',openedAt:'2026-05-11T22:00:00',closedAt:'2026-05-12T01:00:00',netPnl:-250};
+ const sameDay={...trade,id:'same-day',openedAt:'2026-05-11T20:00:00',closedAt:'2026-05-11T20:15:00',netPnl:140};
+ const list=[overnight,sameDay];assert.deepEqual(dailyTradeTotals(list,'opened').get('2026-05-11'),{value:-110,count:2});
+ assert.deepEqual(dailyTradeTotals(list,'closed').get('2026-05-11'),{value:140,count:1});assert.deepEqual(dailyTradeTotals(list,'closed').get('2026-05-12'),{value:-250,count:1});
+ assert.equal(reuseTradeForm({...overnight,id:'new',entry:0,exit:0,quantity:0},overnight).netPnl,undefined);
 });
